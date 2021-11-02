@@ -64,6 +64,11 @@ private:
     
 };
 
+// This class only implements resampling and looping the sample data from
+// the SamplerSoundEx! So it is not a complete sampler voice by itself.
+// Things like ADSR envelopes, filters and panning need to be implemented
+// in subclasses. The demonstration class SamplerVoiceWithProcessing is provided.
+
 class SamplerVoiceEx : public juce::SynthesiserVoice
 {
 public:
@@ -86,27 +91,18 @@ public:
             mSourceSamplePosition = 0.0;
             mNoteVelocity = velocity;
             
-            //adsr.setSampleRate (sound->sourceSampleRate);
-            //adsr.setParameters (sound->params);
-            
-            //adsr.noteOn();
             onStartNote(midiNoteNumber, velocity, pitchWheel);
         }
         else
         {
-            jassertfalse; // this object can only play SamplerSounds!
+            jassertfalse; // this object can only play SamplerSoundExs!
         }
     }
     void stopNote (float velocity, bool allowTailOff) override
     {
-        if (allowTailOff)
-        {
-            //adsr.noteOff();
-        }
-        else
+        if (!allowTailOff)
         {
             clearCurrentNote();
-            //adsr.reset();
         }
         onStopNote(velocity,allowTailOff);
     }
@@ -184,7 +180,7 @@ public:
         }
     }
     // Can override this to implement envelope, filter, pan...
-    // Note that it is *not* necessary here to sum into the buffer, you
+    // Note that it is *not* necessary to sum into the buffer, you
     // can just replace the contents
     virtual void renderVoicePostProcessing(juce::AudioBuffer<float>& buf, int numSamples)
     {
