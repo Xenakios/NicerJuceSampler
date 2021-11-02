@@ -74,7 +74,10 @@ class SamplerVoiceEx : public juce::SynthesiserVoice
 public:
     SamplerVoiceEx()
     {
+        // there is unfortunately no clean way to determine the actual needed buffer size here
+        // will probably have to add an annoying prepareToPlay method...
         mProcessBuffer.setSize(2,2048);
+        mProcessBuffer.clear();
     }
     bool canPlaySound (juce::SynthesiserSound* sound) override
     {
@@ -122,6 +125,12 @@ public:
         {
             if (playingSound->getSampleNumChannels()==0)
                 return;
+            if (numSamples>mProcessBuffer.getNumSamples()
+                || outputBuffer.getNumChannels()>mProcessBuffer.getNumChannels())
+            {
+                // ok, this is not ideal, but hopefully this will never happen :-)
+                mProcessBuffer.setSize(outputBuffer.getNumChannels(),numSamples);
+            }
             auto& data = playingSound->getAudioBuffer();
             const float* const inL = data.getReadPointer (0);
             const float* const inR = data.getNumChannels() > 1 ? data.getReadPointer (1) : nullptr;
